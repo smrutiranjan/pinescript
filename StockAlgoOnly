@@ -1,0 +1,65 @@
+//@version=5
+indicator("StockAlgoOnly", overlay=true)
+
+// EMA 20 and VWAP Calculation
+ema20 = ta.ema(close, 20) 
+ema200 = ta.ema(close, 200) 
+  
+// RSI Calculation
+rsi = ta.rsi(open, 14)
+
+ 
+// Plot EMA 20 and VWAP on the chart
+plot(ema20, title="EMA 20", color=#880E4F ) 
+plot(ema200, color=color.green, title="EMA 200")
+
+
+ // Market Conditions
+isBullish = open > ema20 and open < ema200 // in 5min when close above ema > 20 but less than ema 200 -Bullish for small time untill above ema 200
+isStrongBullish = close > ema20 and close > ema200 // in 5min when close > 20 200 strong bulllish
+isBearish = close < ema20 and close > ema200 // in 5min close below ema 20 but above ema 200,Bearish for small time untill below ema 200
+isStrongBearish = open < ema20 and open < ema200 // in 5min when close < 20 200 strong Bearish
+
+
+// Display Bullish or Bearish information text
+var label lbl = na 
+marketstatus=""
+if (isBullish)
+    lbl := label.new(x=bar_index+10, y=high, text="Bullish", style=label.style_label_down, color=color.green, textcolor=color.white)
+    marketstatus :="Bullish"
+
+else if (isStrongBullish)
+    lbl := label.new(x=bar_index+10, y=high, text="Strong Bullish", style=label.style_label_down, color=color.green, textcolor=color.white)
+    marketstatus :="Strong Bullish"
+
+else if (isBearish)
+    lbl := label.new(x=bar_index+10, y=high, text="Bearish", style=label.style_label_down, color=color.orange, textcolor=color.white)
+    marketstatus :="Bearish"
+
+else if (isStrongBearish)
+    lbl := label.new(x=bar_index+10, y=high, text="Strong Bearish", style=label.style_label_down, color=color.red, textcolor=color.white)
+    marketstatus :="Strong Bearish"
+
+//buy_signal=(isBullish or isStrongBullish) and rsi >= 60 and ta.crossover(ema20,ema200)
+//sell_signal=(isBearish or  isStrongBearish) and  rsi <= 40 and ta.crossunder(ema20,ema200)
+
+buy_signal=(isStrongBullish) and rsi >= 60 
+sell_signal=(isStrongBearish) and  rsi <= 40
+
+// Trigger Buy Alerts
+alertcondition(buy_signal, title="Buy Alert", message="buy stock")
+
+// Trigger Buy Alerts
+alertcondition(sell_signal, title="Sell Alert", message="sell stock") 
+
+// Plot Buy Signal on the chart 
+plotshape(series=buy_signal, location=location.belowbar, color=color.green, style=shape.triangleup, title="Buy Stock", text="",size=size.tiny, offset=-1)
+
+// Plot Buy Signal on the chart 
+plotshape(series=sell_signal, location=location.abovebar, color=color.red, style=shape.triangledown, title="Sell Stock", text="",size=size.tiny, offset=-1)
+
+
+// Remove old labels
+if (bar_index > 1)
+    label.delete(lbl[1])
+
